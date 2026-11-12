@@ -1,11 +1,8 @@
 """Basic counts for a piece of text."""
 
 from dataclasses import dataclass
-import re
 
-# A word is a run of letters, digits and apostrophes, the same rule the
-# frequency module uses, so both report the same words.
-WORD_PATTERN = re.compile(r"[A-Za-z0-9']+")
+from textstats.words import find_words
 
 
 @dataclass(frozen=True)
@@ -16,11 +13,16 @@ class TextCounts:
 
 
 def count_text(text: str) -> TextCounts:
-    """Count lines, words and characters in text."""
+    """Count lines, words and characters in text.
+
+    Lines are counted the way str.splitlines() splits them, which also breaks
+    on form feeds and Unicode line separators, so the number can differ from
+    `wc -l`. A last line without a newline counts. Characters are code points.
+    """
     if not isinstance(text, str):
         raise TypeError("text must be a str")
     return TextCounts(
         lines=len(text.splitlines()),
-        words=len(WORD_PATTERN.findall(text)),
+        words=len(find_words(text)),
         characters=len(text),
     )

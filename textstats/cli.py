@@ -7,10 +7,17 @@ from textstats.core import count_text
 from textstats.frequency import top_words
 
 
+def non_negative(value: str) -> int:
+    number = int(value)
+    if number < 0:
+        raise argparse.ArgumentTypeError("must be 0 or more")
+    return number
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="textstats", description="Report statistics about a text file.")
     parser.add_argument("file", help="text file to read, or - for standard input")
-    parser.add_argument("--top", type=int, default=5, metavar="N", help="show the N most frequent words (default 5, 0 to hide)")
+    parser.add_argument("--top", type=non_negative, default=5, metavar="N", help="show the N most frequent words (default 5, 0 to hide)")
     parser.add_argument("--keep-stopwords", action="store_true", help="count common words such as 'the' too")
     return parser
 
@@ -28,6 +35,9 @@ def main(argv: list[str] | None = None) -> int:
         text = read_text(args.file)
     except OSError as err:
         print(f"textstats: {err}", file=sys.stderr)
+        return 1
+    except UnicodeDecodeError:
+        print(f"textstats: {args.file} is not UTF-8 text", file=sys.stderr)
         return 1
 
     counts = count_text(text)

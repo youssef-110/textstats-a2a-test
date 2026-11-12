@@ -26,3 +26,19 @@ def test_punctuation_is_not_a_word():
 def test_rejects_non_string():
     with pytest.raises(TypeError):
         count_text(None)
+
+
+def test_lone_apostrophes_are_not_words():
+    assert count_text("' '' - '").words == 0
+
+
+def test_quoted_word_is_one_word():
+    assert count_text("'quoted'").words == 1
+
+
+def test_non_ascii_words_stay_whole():
+    assert count_text("café naïve привет").words == 3
+
+
+def test_unicode_line_separator_counts_as_a_line_break():
+    assert count_text("a b").lines == 2

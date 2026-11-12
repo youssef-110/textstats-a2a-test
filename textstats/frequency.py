@@ -1,8 +1,6 @@
-import re
 from collections import Counter
 
-# Runs of Unicode letters/digits, plus apostrophes.
-_WORD_RE = re.compile(r"(?:[^\W_]|')+")
+from textstats.words import find_words
 
 STOPWORDS = frozenset({
     "a", "about", "above", "after", "again", "all", "am", "an", "and", "any",
@@ -32,10 +30,7 @@ def top_words(text: str, n: int = 10, ignore_stopwords: bool = True) -> list[tup
         return []
 
     counts: Counter[str] = Counter()
-    for match in _WORD_RE.finditer(text.lower()):
-        word = match.group().strip("'")
-        if not word:
-            continue
+    for word in find_words(text.lower()):
         if ignore_stopwords and word in STOPWORDS:
             continue
         counts[word] += 1

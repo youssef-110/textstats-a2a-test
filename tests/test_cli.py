@@ -34,3 +34,32 @@ def test_top_zero_hides_the_list(tmp_path, capsys):
 def test_missing_file_is_an_error(tmp_path, capsys):
     assert main([str(tmp_path / "nope.txt")]) == 1
     assert "textstats:" in capsys.readouterr().err
+
+
+def test_non_utf8_file_is_an_error_not_a_traceback(tmp_path, capsys):
+    sample = tmp_path / "latin1.txt"
+    sample.write_bytes("caf\xe9".encode("latin-1"))
+
+    assert main([str(sample)]) == 1
+    assert "not UTF-8" in capsys.readouterr().err
+
+
+def test_negative_top_is_rejected(tmp_path, capsys):
+    import pytest
+
+    sample = tmp_path / "sample.txt"
+    sample.write_text("cat", encoding="utf-8")
+    with pytest.raises(SystemExit) as stop:
+        main([str(sample), "--top", "-3"])
+    assert stop.value.code == 2
+    assert "must be 0 or more" in capsys.readouterr().err
+
+
+def test_reads_standard_input(monkeypatch, capsys):
+    import io
+
+    monkeypatch.setattr("sys.stdin", io.StringIO("cat cat dog"))
+    assert main(["-"]) == 0
+    out = capsys.readouterr().out
+    assert "words:      3" in out
+    assert "2  cat" in out
